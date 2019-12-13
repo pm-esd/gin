@@ -223,9 +223,43 @@ func (engine *Engine) SetHTMLTemplate(templ *template.Template) {
 	engine.HTMLRender = render.HTMLProduction{Template: templ.Funcs(engine.FuncMap)}
 }
 
-// SetFuncMap sets the FuncMap used for template.FuncMap.
+//SetFuncMap sets the FuncMap used for template.FuncMap.
 func (engine *Engine) SetFuncMap(funcMap template.FuncMap) {
 	engine.FuncMap = funcMap
+}
+
+//InitFuncMap 系统初始化模板自定义函数
+func (engine *Engine) InitFuncMap() {
+	engine.FuncMap["dateformat"] = DateFormat
+	engine.FuncMap["date"] = Date
+	engine.FuncMap["compare"] = Compare
+	engine.FuncMap["compare_not"] = CompareNot
+	engine.FuncMap["not_nil"] = NotNil
+	engine.FuncMap["not_null"] = NotNil
+	engine.FuncMap["substr"] = Substr
+	engine.FuncMap["html2str"] = HTML2str
+	engine.FuncMap["str2html"] = Str2html
+	engine.FuncMap["htmlquote"] = Htmlquote
+	engine.FuncMap["htmlunquote"] = Htmlunquote
+	engine.FuncMap["renderform"] = RenderForm
+	engine.FuncMap["assets_js"] = AssetsJs
+	engine.FuncMap["assets_css"] = AssetsCSS
+	engine.FuncMap["map_get"] = MapGet
+
+	// Comparisons
+	engine.FuncMap["eq"] = eq // ==
+	engine.FuncMap["ge"] = ge // >=
+	engine.FuncMap["gt"] = gt // >
+	engine.FuncMap["le"] = le // <=
+	engine.FuncMap["lt"] = lt // <
+	engine.FuncMap["ne"] = ne // !=
+	engine.FuncMap["urlfor"] = URLFor
+}
+
+// AddFuncMap let user to register a func in the template.
+func (engine *Engine) AddFuncMap(key string, fn interface{}) error {
+	engine.FuncMap[key] = fn
+	return nil
 }
 
 // NoRoute adds handlers for NoRoute. It return a 404 code by default.
