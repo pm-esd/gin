@@ -219,7 +219,17 @@ func (group *RouterGroup) combineHandlers(handlers HandlersChain) HandlersChain 
 }
 
 func (group *RouterGroup) calculateAbsolutePath(relativePath string) string {
-	return joinPaths(group.basePath, relativePath)
+	path := joinPaths(group.basePath, relativePath)
+	//如果路由最后一个字符是'/',则需要删除掉
+
+	reg := regexp.MustCompile(`\/{2,}`)
+	path = reg.ReplaceAllString(path, "/")
+	if len(path) > 1 && path[len(path)-1:] == "/" {
+		path = path[:len(path)-1]
+	}
+	path = reg.ReplaceAllString(path, "/")
+
+	return path
 }
 
 func (group *RouterGroup) returnObj() IRoutes {
