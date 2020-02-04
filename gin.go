@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"sync"
 
+	"github.com/pm-esd/gin/internal/bytesconv"
 	"github.com/pm-esd/gin/render"
 )
 
@@ -535,7 +536,7 @@ func redirectFixedPath(c *Context, root *node, trailingSlash bool) bool {
 	rPath := req.URL.Path
 
 	if fixedPath, ok := root.findCaseInsensitivePath(cleanPath(rPath), trailingSlash); ok {
-		req.URL.Path = string(fixedPath)
+		req.URL.Path = bytesconv.BytesToString(fixedPath)
 		redirectRequest(c)
 		return true
 	}
