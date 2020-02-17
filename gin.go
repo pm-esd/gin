@@ -5,14 +5,18 @@
 package gin
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"path"
 	"regexp"
+	"runtime"
 	"sync"
+	"time"
 
 	"github.com/pm-esd/gin/internal/bytesconv"
 	"github.com/pm-esd/gin/render"
@@ -347,6 +351,42 @@ func (engine *Engine) Run(addr ...string) (err error) {
 	address := resolveAddress(addr)
 	debugPrint("Listening and serving HTTP on %s\n", address)
 	err = http.ListenAndServe(address, engine)
+	return
+}
+
+// RunCPU attaches the router to a http.Server and starts listening and serving HTTP requests.
+// It is a shortcut for http.ListenAndServe(addr, router)
+// Note: this method will block the calling goroutine indefinitely unless an error happens.
+func (engine *Engine) RunCPU(addr ...string) (err error) {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	address := resolveAddress(addr)
+	server := &http.Server{
+		Addr:         address,
+		Handler:      engine,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
+	go func() {
+		err = server.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			debugPrint("HTTP server listen: %s\n", err)
+		}
+	}()
+
+	// 等待中断信号以优雅地关闭服务器（设置 5 秒的超时时间）
+	signalChan := make(chan os.Signal)
+	signal.Notify(signalChan, os.Interrupt)
+	sig := <-signalChan
+
+	debugPrint("Get Signal:", sig)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		debugPrint("Server Shutdown:", err)
+	}
 	return
 }
 
