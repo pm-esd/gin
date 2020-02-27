@@ -5,18 +5,14 @@
 package gin
 
 import (
-	"context"
 	"fmt"
 	"html/template"
 	"net"
 	"net/http"
 	"os"
-	"os/signal"
 	"path"
 	"regexp"
-	"runtime"
 	"sync"
-	"time"
 
 	"github.com/pm-esd/gin/internal/bytesconv"
 	"github.com/pm-esd/gin/render"
