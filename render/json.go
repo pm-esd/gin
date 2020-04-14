@@ -11,7 +11,6 @@ import (
 	"net/http"
 
 	"github.com/pm-esd/gin/internal/bytesconv"
-	"github.com/pm-esd/gin/internal/json"
 )
 
 // JSON contains the given interface object.

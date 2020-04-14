@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/pm-esd/gin/internal/bytesconv"
-	"github.com/pm-esd/gin/internal/json"
 )
 
 var errUnknownType = errors.New("unknown type")

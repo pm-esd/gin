@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-
-	"github.com/pm-esd/gin/internal/json"
 )
 
 // ErrorType is an unsigned 64-bit error code as defined in the gin spec.

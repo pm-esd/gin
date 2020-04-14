@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
-	"github.com/pm-esd/gin/internal/json"
 )
 
 // EnableDecoderUseNumber is used to call the UseNumber method on the JSON
