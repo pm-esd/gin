@@ -116,9 +116,7 @@ type Engine struct {
 	routes           map[string]string
 }
 
-// var _ IRouter = &Engine{}
 
-// var App *Engine
 
 var (
 	App *Engine
@@ -172,7 +170,7 @@ func Default() *Engine {
 }
 
 func (engine *Engine) allocateContext() *Context {
-	return &Context{engine: engine, KeysMutex: &sync.RWMutex{}}
+	return &Context{engine: engine}
 }
 
 // Delims sets template left and right delims and returns a Engine instance.
