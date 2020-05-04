@@ -34,8 +34,10 @@ const (
 	MIMEPOSTForm          = binding.MIMEPOSTForm
 	MIMEMultipartPOSTForm = binding.MIMEMultipartPOSTForm
 	MIMEYAML              = binding.MIMEYAML
-	BodyBytesKey          = "_pm-esd/gin/bodybyteskey"
 )
+
+// BodyBytesKey indicates a default body bytes key.
+const BodyBytesKey = "_pm-esd/gin/bodybyteskey"
 
 const abortIndex int8 = math.MaxInt8 / 2
 
