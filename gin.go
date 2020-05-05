@@ -105,7 +105,7 @@ type Engine struct {
 	RemoveExtraSlash bool
 
 	delims           render.Delims
-	secureJsonPrefix string
+	secureJSONPrefix string
 	HTMLRender       render.HTMLRender
 	FuncMap          template.FuncMap
 	allNoRoute       HandlersChain
