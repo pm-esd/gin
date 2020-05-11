@@ -21,8 +21,8 @@ import (
 const defaultMultipartMemory = 32 << 20 // 32 MB
 
 var (
-	default404Body   = []byte("404 page not found")
-	default405Body   = []byte("405 method not allowed")
+	default404Body = []byte("404 page not found")
+	default405Body = []byte("405 method not allowed")
 )
 
 var defaultAppEngine bool
@@ -114,10 +114,9 @@ type Engine struct {
 	noMethod         HandlersChain
 	pool             sync.Pool
 	trees            methodTrees
+	maxParams        uint16
 	routes           map[string]string
 }
-
-
 
 var (
 	App *Engine
@@ -171,7 +170,8 @@ func Default() *Engine {
 }
 
 func (engine *Engine) allocateContext() *Context {
-	return &Context{engine: engine}
+	v := make(Params, 0, engine.maxParams)
+	return &Context{engine: engine, params: &v}
 }
 
 // Delims sets template left and right delims and returns a Engine instance.
@@ -305,6 +305,11 @@ func (engine *Engine) addRoute(method, path, routeName string, handlers Handlers
 		engine.trees = append(engine.trees, methodTree{method: method, root: root})
 	}
 	root.addRoute(path, routeName, handlers)
+
+	// Update maxParams
+	if paramsCount := countParams(path); paramsCount > engine.maxParams {
+		engine.maxParams = paramsCount
+	}
 	if engine.routes[routeName] != "" && routeName != "static_fs_get" && routeName != "static_fs_head" && routeName != "static_file_get" && routeName != "static_file_head" {
 		panic(routeName + ",is exist")
 	}
@@ -457,10 +462,12 @@ func (engine *Engine) handleHTTPRequest(c *Context) {
 		}
 		root := t[i].root
 		// Find route in tree
-		value := root.getValue(rPath, c.Params, unescape)
+		value := root.getValue(rPath, c.params, unescape)
+		if value.params != nil {
+			c.Params = *value.params
+		}
 		if value.handlers != nil {
 			c.handlers = value.handlers
-			c.Params = value.params
 			c.fullPath = value.fullPath
 			c.routeName = value.routeName
 			c.Next()
