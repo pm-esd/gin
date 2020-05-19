@@ -1,3 +1,8 @@
 #!/bin/bash
 
-goimports -w ./;
+goimports -w ./
+
+
+
+gofmt -w ./
+

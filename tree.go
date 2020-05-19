@@ -5,10 +5,18 @@
 package gin
 
 import (
+	"bytes"
 	"net/url"
+	"reflect"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+	"unsafe"
+)
+
+var (
+	strColon = []byte(":")
+	strStar  = []byte("*")
 )
 
 // Param is a single URL parameter, consisting of a key and a value.
@@ -72,14 +80,35 @@ func longestCommonPrefix(a, b string) int {
 	return i
 }
 
+// bytesToStr converts byte slice to a string without memory allocation.
+// See https://groups.google.com/forum/#!msg/Golang-Nuts/ENgbUzYvCuU/90yGx7GUAgAJ .
+//
+// Note it may break if string and/or slice header will change
+// in the future go versions.
+func bytesToStr(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+// strToBytes converts string to a byte slice without memory allocation.
+//
+// Note it may break if string and/or slice header will change
+// in the future go versions.
+func strToBytes(s string) (b []byte) {
+	/* #nosec G103 */
+	bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+	/* #nosec G103 */
+	sh := *(*reflect.StringHeader)(unsafe.Pointer(&s))
+	bh.Data = sh.Data
+	bh.Len = sh.Len
+	bh.Cap = sh.Len
+	return b
+}
+
 func countParams(path string) uint16 {
 	var n uint
-	for i := range []byte(path) {
-		switch path[i] {
-		case ':', '*':
-			n++
-		}
-	}
+	s := strToBytes(path)
+	n += uint(bytes.Count(s, strColon))
+	n += uint(bytes.Count(s, strStar))
 	return uint16(n)
 }
 
@@ -165,7 +194,7 @@ walk:
 
 			n.children = []*node{&child}
 			// []byte for proper unicode char conversion, see #65
-			n.indices = string([]byte{n.path[i]})
+			n.indices = bytesToStr([]byte{n.path[i]})
 			n.path = path[:i]
 			n.handlers = nil
 			n.wildChild = false
@@ -226,7 +255,7 @@ walk:
 			// Otherwise insert it
 			if c != ':' && c != '*' {
 				// []byte for proper unicode char conversion, see #65
-				n.indices += string([]byte{c})
+				n.indices += bytesToStr([]byte{c})
 				child := &node{
 					fullPath:  fullPath,
 					routeName: routeName,
@@ -244,6 +273,7 @@ walk:
 			panic("handlers are already registered for path '" + fullPath + "'")
 		}
 		n.handlers = handlers
+		n.fullPath = fullPath
 		return
 	}
 }
@@ -410,7 +440,7 @@ walk: // Outer loop for walking the tree
 			if path[:len(prefix)] == prefix {
 				path = path[len(prefix):]
 				// If this node does not have a wildcard (param or catchAll)
-				// child,  we can just look up the next child node and continue
+				// child, we can just look up the next child node and continue
 				// to walk down the tree
 				if !n.wildChild {
 					idxc := path[0]
